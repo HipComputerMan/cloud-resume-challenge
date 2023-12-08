@@ -1,6 +1,36 @@
+provider "aws" {
+    profile = "AdministratorAccess-395067379223"
+    region = "us-east-2"
+}
+
 resource "aws_s3_bucket" "my_bucket" {
-  bucket = "logan-cloud-resume-challenge"
+  bucket = "brandon-chesser-cloud-resume-challenge"
   
+}
+
+resource "aws_s3_bucket_policy" "allow_access_from_CloudFront" {
+  bucket = aws_s3_bucket.my_bucket.id
+  policy = data.aws_iam_policy_document.allow_access_from_CloudFront.json
+}
+
+data "aws_iam_policy_document" "allow_access_from_CloudFront" {
+  statement {
+    actions = [
+      "s3:GetObject",
+    ]
+
+    resources = ["arn:aws:s3:::brandon-chesser-cloud-resume-challenge/*"]
+    principals {
+      type = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceArn"
+      values   = ["arn:aws:cloudfront::395067379223:distribution/E1D5RQ6IBQN8N8"]
+    }
+  }
 }
 
 
@@ -17,12 +47,12 @@ resource "aws_dynamodb_table" "my_table" {
 
 resource "aws_cloudfront_distribution" "my_distribution" {
     enabled             = true
-    aliases             = ["resume.logan-leffeler.com"]
+    aliases             = ["resume.chssr.com"]
     default_root_object = "index.html"
     price_class         = "PriceClass_100"
     is_ipv6_enabled     = true
     viewer_certificate {
-      acm_certificate_arn      = "arn:aws:acm:us-east-1:611725109315:certificate/bd768ce7-7c43-4ba0-a1b6-6542d571fb60"
+      acm_certificate_arn      = "arn:aws:acm:us-east-1:395067379223:certificate/c283a72a-c149-47d5-bfa5-ce6b5feaf5d3"
       minimum_protocol_version = "TLSv1.2_2021"
       ssl_support_method       = "sni-only"
     }
@@ -35,15 +65,15 @@ resource "aws_cloudfront_distribution" "my_distribution" {
     }
 
     origin {
-      domain_name              = "logan-cloud-resume-challenge.s3.us-east-1.amazonaws.com"
-      origin_id                = "logan-cloud-resume-challenge.s3.us-east-1.amazonaws.com"
-      origin_access_control_id = "EJIXJV90LN5S9"
+      domain_name              = "brandon-chesser-cloud-resume-challenge.s3.us-east-2.amazonaws.com"
+      origin_id                = "brandon-chesser-cloud-resume-challenge.s3.us-east-2.amazonaws.com"
+      origin_access_control_id = "EAOVOSNXH1R3J"
       connection_attempts      = 3
       connection_timeout       = 10
     }
 
     default_cache_behavior {
-        target_origin_id       = "logan-cloud-resume-challenge.s3.us-east-1.amazonaws.com"
+        target_origin_id       = "brandon-chesser-cloud-resume-challenge.s3.us-east-2.amazonaws.com"
         allowed_methods        = ["GET", "HEAD"]
         cached_methods         = ["GET", "HEAD"]
         viewer_protocol_policy = "redirect-to-https"
@@ -104,7 +134,7 @@ resource "aws_iam_policy" "iam_policy_for_resume_project" {
                         "logs:PutLogEvents"
                     ],
                     "Resource": [
-                         "arn:aws:logs:us-east-1:*:log-group:/aws/lambda/myfunc:*"
+                         "arn:aws:logs:us-east-2:*:log-group:/aws/lambda/myfunc:*"
                     ]
                 },
                 
@@ -113,7 +143,7 @@ resource "aws_iam_policy" "iam_policy_for_resume_project" {
                     "Action" : [
                         "dynamodb:*"
                     ],
-                    "Resource" : "arn:aws:dynamodb:us-east-1:611725109315:table/cloud-resume"
+                    "Resource" : "arn:aws:dynamodb:us-east-2:395067379223:table/cloud-resume"
                 }
             ]
         }
